@@ -265,8 +265,11 @@ def loop():
 	global disp_mode
 	while True:
 		axes = adxl345.getAxes(True)
-		#angle = math.atanh( axes['x'] / axes['y'] ) # in radians
-		angle = math.asinh( axes['x'] ) # in radians
+		if (axes['y'] + axes['z']) != 0:
+                    angle = math.atanh( axes['x'] / 
+                            (math.sqrt((axes['y']**2) + 
+                                (axes['z']**2)) ) ) # in radians
+		#angle = math.asinh( axes['x'] ) # in radians
 		if angle > 0: sign = "+"
 		else: sign = "-"
 		
