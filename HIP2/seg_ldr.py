@@ -13,6 +13,8 @@ segCode = [0x3f,0x06,0x5b,0x4f,0x66,0x6d,0x7d,0x07,0x7f,0x6f]  #0~9
 pins = [11,12,13,15,16,18,22,7,3,5,24,26]  
 bits = [BIT0, BIT1, BIT2, BIT3]  
 
+ldr = LightSensor(37)
+
 def print_msg():  
 	print 'Program is running...'  
 	print 'Please press Ctrl+C to end the program...'  
@@ -27,20 +29,7 @@ def digitalWriteByte(val):
 	GPIO.output(22, val & (0x01 << 6))  
 	GPIO.output(7,  val & (0x01 << 7))  
 
-def display_1():  
-	GPIO.output(BIT0, GPIO.LOW)   
-	for i in range(10):  
-		digitalWriteByte(segCode[i])  
-		time.sleep(0.5)  
-
-def display_2():  
-	for bit in bits:  
-		GPIO.output(bit, GPIO.LOW)   
-	for i in range(10):  
-		digitalWriteByte(segCode[i])  
-		time.sleep(0.5)  
-
-def display_3(num):  
+def display(num):  
 	b0 = num % 10  
 	b1 = num % 100 / 10   
 	b2 = num % 1000 / 100  
@@ -101,18 +90,14 @@ def setup():
 		GPIO.output(pin, GPIO.HIGH)  #set all pins are high level(3.3V)  
 
 def loop():  
-	ldr = LightSensor(26)
+	
 	while True:  
 		print_msg()
-		print("LDR Value: %.3f" % float(ldr.value))  
-		#display_1()  
-		#time.sleep(1)  
-		#display_2()  
-		#time.sleep(1)  
+		print("LDR Value: %.3f" % float(ldr.value))   
 
 		tmp = int(raw_input('Please input a num(0~9999):'))  
 		for i in range(500):  
-			display_3(tmp)  
+			display(tmp)  
 		time.sleep(1)  
 
 def destroy():   #When program ending, the function is executed.   
