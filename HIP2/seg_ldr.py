@@ -101,8 +101,10 @@ def setup():
 		GPIO.output(pin, GPIO.HIGH)  #set all pins are high level(3.3V)  
 
 def loop():  
+	ldr = LightSensor(26)
 	while True:  
-		print_msg()  
+		print_msg()
+		print("LDR Value: %.3f" % float(ldr.value))  
 		#display_1()  
 		#time.sleep(1)  
 		#display_2()  
