@@ -2,7 +2,7 @@
 
 import RPi.GPIO as GPIO  
 import time  
-from gpiozero import LightSensor, Buzzer
+import ADC0832
 
 BIT0 = 3   
 BIT1 = 5  
@@ -87,10 +87,10 @@ def setup():
 	GPIO.setwarnings(False)
 	for pin in pins:  
 		GPIO.setup(pin, GPIO.OUT)    #set all pins' mode is output  
-		GPIO.output(pin, GPIO.HIGH)  #set all pins are high level(3.3V)  
+		GPIO.output(pin, GPIO.HIGH)  #set all pins are high level(3.3V) 
+        ADC0832.setup()
 
 def loop():  
-	
 	while True:  
 		print_msg()
 		print("LDR Value: %.3f" % float(ldr.value))   
