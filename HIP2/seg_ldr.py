@@ -14,6 +14,7 @@ pins = [11,12,13,15,16,18,22,7,3,5,24,26]
 bits = [BIT0, BIT1, BIT2, BIT3]  
 
 ldr = LightSensor(37)
+ppl_cnt = 0 # placeholder count
 
 def print_msg():  
 	print 'Program is running...'  
@@ -88,17 +89,31 @@ def setup():
 	for pin in pins:  
 		GPIO.setup(pin, GPIO.OUT)    #set all pins' mode is output  
 		GPIO.output(pin, GPIO.HIGH)  #set all pins are high level(3.3V) 
-        ADC0832.setup()
+    ADC0832.setup()
+
 
 def loop():  
 	while True:  
-		print_msg()
-		print("LDR Value: %.3f" % float(ldr.value))   
+		
+		## ADC / LDR Section ##
+		res = ADC0832.getResult() - 80
+		if res < 0:
+			res = 0
+		if res > 100:
+			res = 100
+		print 'res = %d' % res
+		time.sleep(0.2)
+		######
 
-		tmp = int(raw_input('Please input a num(0~9999):'))  
-		for i in range(500):  
-			display(tmp)  
-		time.sleep(1)  
+		if (res == 0): pass
+		else:
+			print_msg()
+			#print("LDR Value: %.3f" % float(ldr.value))   
+			display(ppl_cnt)
+			# tmp = int(raw_input('Please input a num(0~9999):'))  
+			# for i in range(500):  
+			# 	display(tmp)  
+			time.sleep(1)  
 
 def destroy():   #When program ending, the function is executed.   
 	for pin in pins:    
@@ -111,3 +126,4 @@ if __name__ == '__main__': #Program starting from here
 		loop()    
 	except KeyboardInterrupt:    
 		destroy()    
+		ADC0832.destroy()
