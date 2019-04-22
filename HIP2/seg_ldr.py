@@ -3,6 +3,7 @@
 import RPi.GPIO as GPIO  
 import time  
 import ADC0832
+from picamera import PiCamera
 
 BIT0 = 3   
 BIT1 = 5  
@@ -13,8 +14,9 @@ segCode = [0x3f,0x06,0x5b,0x4f,0x66,0x6d,0x7d,0x07,0x7f,0x6f]  #0~9
 pins = [11,12,13,15,16,18,22,7,3,5,24,26]  
 bits = [BIT0, BIT1, BIT2, BIT3]  
 
-ldr = LightSensor(37)
+
 ppl_cnt = 0 # placeholder count
+camera = PiCamera()
 
 def print_msg():  
 	print 'Program is running...'  
@@ -89,11 +91,12 @@ def setup():
 	for pin in pins:  
 		GPIO.setup(pin, GPIO.OUT)    #set all pins' mode is output  
 		GPIO.output(pin, GPIO.HIGH)  #set all pins are high level(3.3V) 
-    ADC0832.setup()
+        ADC0832.setup()
 
 
 def loop():  
-	while True:  
+	global camera
+        while True:  
 		
 		## ADC / LDR Section ##
 		res = ADC0832.getResult() - 80
@@ -105,15 +108,19 @@ def loop():
 		time.sleep(0.2)
 		######
 
-		if (res == 0): pass
+		if (res == 0):
+                    camera.stop_preview
 		else:
-			print_msg()
+			global ppl_cnt
+                        camera.start_preview()
+                        print_msg()
 			#print("LDR Value: %.3f" % float(ldr.value))   
 			display(ppl_cnt)
 			# tmp = int(raw_input('Please input a num(0~9999):'))  
 			# for i in range(500):  
 			# 	display(tmp)  
-			time.sleep(1)  
+			ppl_cnt += 1
+                        time.sleep(2)  
 
 def destroy():   #When program ending, the function is executed.   
 	for pin in pins:    
