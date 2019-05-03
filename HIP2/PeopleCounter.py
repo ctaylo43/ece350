@@ -126,6 +126,8 @@ def loop():
 		# put everything below here in an else statement having correct amount of light
 		if GPIO.input(IR1PIN) == GPIO.HIGH:
 			ppl_cnt += 1
+		if GPIO.input(IR2PIN) == GPIO.HIGH:
+			ppl_cnt -= 1
 		display(ppl_cnt)
 
 
