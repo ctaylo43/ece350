@@ -27,6 +27,7 @@ IR2_detect = False
 
 ldr = LightSensor(37)
 
+p = None
 
 def print_msg():  
 	print 'Program is running...'  
@@ -108,8 +109,8 @@ def setup():
     GPIO.setup(IR2Pin, GPIO.IN)
 
     # Buzzer setup
-    GPIO.setup(BeepPin, GPIO.OUT)   # Set pin mode as output
-	GPIO.output(BeepPin, GPIO.HIGH) # Set pin to high(+3.3V) to off the beep
+    GPIO.setup(BZRPin, GPIO.OUT)   # Set pin mode as output
+	GPIO.output(BZRPin, GPIO.LOW)
 
 def IR1_isr():
 	IR1_detect = True
@@ -117,17 +118,35 @@ def IR1_isr():
 def IR2_isr():
 	IR2_detect = True
 
+def enter_sound():
+	p.changeFrequency(1500)
+	p.start(50) # 50% Duty Cycle
+	time.sleep(0.5)
+	p.changeFrequency(2000)
+	time.sleep(0.5)
+	p.stop()
 
+def exit_sound():
+	p.changeFrequency(2000)
+	p.start(50) # 50% Duty Cycle
+	time.sleep(0.5)
+	p.changeFrequency(1500)
+	time.sleep(0.5)
+	p.stop()
 
 def loop():
 	#GPIO.add_event_detect(IR1Pin, GPIO.FALLING, callback=IR1_isr)
 	#GPIO.add_event_detect(IR2Pin, GPIO.FALLING, callback=IR2_isr)
+	global p
+	p = GPIO.PWM(BZRPin, 50)
 	while True:
 		# put everything below here in an else statement having correct amount of light
-		if GPIO.input(IR1PIN) == GPIO.HIGH:
+		if GPIO.input(IR1Pin) == GPIO.HIGH:
 			ppl_cnt += 1
-		if GPIO.input(IR2PIN) == GPIO.HIGH:
+			enter_sound()
+		elif GPIO.input(IR2Pin) == GPIO.HIGH:
 			ppl_cnt -= 1
+			exit_sound()
 		display(ppl_cnt)
 
 
