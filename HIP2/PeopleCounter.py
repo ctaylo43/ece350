@@ -1,5 +1,6 @@
 import RPi.GPIO as GPIO
 import time
+import ADC0832
 from picamera import PiCamera
 
 #~~~~ 4 Bit 7 Segment Display Definitions ~~~~~
@@ -22,12 +23,11 @@ camera = PiCamera()
 
 #~~~~ Global Variables ~~~~
 ppl_cnt = 0 # number of people
-IR1_detect = False
-IR2_detect = False
-
-ldr = LightSensor(37)
-
-p = None
+res = None # value of ldr
+p = None # pwm
+cam_on = False
+lowlight_cnt = 0
+highlight_cnt = 0
 
 def print_msg():  
 	print 'Program is running...'  
@@ -102,58 +102,79 @@ def setup():
 	for pin in pins:  # Setup 7 Seg pins
 		GPIO.setup(pin, GPIO.OUT)    #set all pins' mode is output  
 		GPIO.output(pin, GPIO.HIGH)  #set all pins are high level(3.3V) 
-    ADC0832.setup()	# setup ADC
+	
+	ADC0832.setup()	# setup ADC
 
-    # IR Sensor setup
-    GPIO.setup(IR1Pin, GPIO.IN)
-    GPIO.setup(IR2Pin, GPIO.IN)
-
-    # Buzzer setup
-    GPIO.setup(BZRPin, GPIO.OUT)   # Set pin mode as output
+	# IR Sensor setup
+	GPIO.setup(IR1Pin, GPIO.IN)
+	GPIO.setup(IR2Pin, GPIO.IN)
+    
+	# Buzzer setup
+	GPIO.setup(BZRPin, GPIO.OUT)   # Set pin mode as output
 	GPIO.output(BZRPin, GPIO.LOW)
-
-def IR1_isr():
-	IR1_detect = True
-
-def IR2_isr():
-	IR2_detect = True
+	
+	#~ camera.start_preview() # start camera view
+	#~ camera.rotation = 180
 
 def enter_sound():
-	p.changeFrequency(1500)
+	global p
+	p.ChangeFrequency(1500)
 	p.start(50) # 50% Duty Cycle
 	time.sleep(0.5)
-	p.changeFrequency(2000)
+	p.ChangeFrequency(2000)
 	time.sleep(0.5)
 	p.stop()
 
 def exit_sound():
-	p.changeFrequency(2000)
+	global p
+	p.ChangeFrequency(2000)
 	p.start(50) # 50% Duty Cycle
 	time.sleep(0.5)
-	p.changeFrequency(1500)
+	p.ChangeFrequency(1500)
 	time.sleep(0.5)
 	p.stop()
 
+def read_ldr():
+	global res
+	res = ADC0832.getResult() - 80
+	if res < 0: res = 0
+	if res > 100: res = 100
+	#print 'res = %d' % res
+
 def loop():
-	#GPIO.add_event_detect(IR1Pin, GPIO.FALLING, callback=IR1_isr)
-	#GPIO.add_event_detect(IR2Pin, GPIO.FALLING, callback=IR2_isr)
 	global p
+	global ppl_cnt
+	global highlight_cnt
+	global lowlight_cnt
+	global cam_on
 	p = GPIO.PWM(BZRPin, 50)
 	while True:
-		# put everything below here in an else statement having correct amount of light
-		if GPIO.input(IR1Pin) == GPIO.HIGH:
-			ppl_cnt += 1
-			enter_sound()
-		elif GPIO.input(IR2Pin) == GPIO.HIGH:
-			ppl_cnt -= 1
-			exit_sound()
-		display(ppl_cnt)
+		read_ldr()
+		if res > 20:
+			if cam_on == False:
+				camera.start_preview()
+				camera.rotation = 180
+				cam_on = True
+			if GPIO.input(IR1Pin) == GPIO.LOW:
+				ppl_cnt += 1
+				enter_sound()
+			elif GPIO.input(IR2Pin) == GPIO.LOW:
+				if ppl_cnt > 0: 
+					ppl_cnt -= 1
+					exit_sound()
+			display(ppl_cnt)
+		else:
+			if cam_on == True:
+				camera.stop_preview()
+				cam_on = False
+		
 
 
 def destroy():
+	camera.stop_preview()
 	for pin in pins:    
 		GPIO.output(pin, GPIO.LOW) #set all pins are low level(0V)   
-		GPIO.setup(pin, GPIO.IN)   #set all pins' mode is input  
+		GPIO.setup(pin, GPIO.IN)   #set all pins' mode is input 
 	GPIO.cleanup()                     	# Release resource
 
 if __name__ == '__main__':     # Program start from here
