@@ -1,6 +1,7 @@
 import RPi.GPIO as GPIO
 import time
 import ADC0832
+import datetime
 from picamera import PiCamera
 
 #~~~~ 4 Bit 7 Segment Display Definitions ~~~~~
@@ -148,6 +149,11 @@ def loop():
 	global lowlight_cnt
 	global cam_on
 	p = GPIO.PWM(BZRPin, 50)
+	t = datetime.datetime.now()
+	log = open("log.txt", "w")
+	log.write("Entry and Exit Log")
+	log.write(t.strftime("%c")) # print date
+	log.close()
 	while True:
 		read_ldr()
 		if res > 20:
@@ -158,10 +164,18 @@ def loop():
 			if GPIO.input(IR1Pin) == GPIO.LOW:
 				ppl_cnt += 1
 				enter_sound()
+				log.open("log.txt", "a")
+				log.write("Person entered at " + t.strftime("%X"))
+				log.write("	People count " + str(ppl_cnt))
+				log.close()
 			elif GPIO.input(IR2Pin) == GPIO.LOW:
 				if ppl_cnt > 0: 
 					ppl_cnt -= 1
 					exit_sound()
+					log.open("log.txt", "a")
+					log.write("Person exited at " + t.strftime("%X"))
+					log.write("	People count " + str(ppl_cnt))
+					log.close()
 			display(ppl_cnt)
 		else:
 			if cam_on == True:
@@ -179,6 +193,7 @@ def destroy():
 
 if __name__ == '__main__':     # Program start from here
 	setup()
+	print_msg()
 	try:
 		loop()
 	except KeyboardInterrupt:  # When 'Ctrl+C' is pressed, the child program destroy() will be  executed.
