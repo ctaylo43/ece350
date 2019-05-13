@@ -150,10 +150,9 @@ def loop():
 	global cam_on
 	p = GPIO.PWM(BZRPin, 50)
 	t = datetime.datetime.now()
-	log = open("log.txt", "w")
-	log.write("Entry and Exit Log")
-	log.write(t.strftime("%c")) # print date
-	log.close()
+	log = open("log.txt", "w+")
+	log.write("[Entry and Exit Log]\r\n")
+	log.write(t.strftime("%c") + "\r\n\r\n") # print date
 	while True:
 		read_ldr()
 		if res > 20:
@@ -164,18 +163,14 @@ def loop():
 			if GPIO.input(IR1Pin) == GPIO.LOW:
 				ppl_cnt += 1
 				enter_sound()
-				log.open("log.txt", "a")
-				log.write("Person entered at " + t.strftime("%X"))
-				log.write("	People count " + str(ppl_cnt))
-				log.close()
+				log.write("Person entered at " + t.strftime("%X") + "\r\n")
+				log.write("	People count " + str(ppl_cnt) + "\r\n\r\n")
 			elif GPIO.input(IR2Pin) == GPIO.LOW:
 				if ppl_cnt > 0: 
 					ppl_cnt -= 1
 					exit_sound()
-					log.open("log.txt", "a")
-					log.write("Person exited at " + t.strftime("%X"))
-					log.write("	People count " + str(ppl_cnt))
-					log.close()
+					log.write("Person exited at " + t.strftime("%X") + "\r\n")
+					log.write("	People count " + str(ppl_cnt) + "\r\n\r\n")
 			display(ppl_cnt)
 		else:
 			if cam_on == True:
@@ -199,3 +194,4 @@ if __name__ == '__main__':     # Program start from here
 	except KeyboardInterrupt:  # When 'Ctrl+C' is pressed, the child program destroy() will be  executed.
 		destroy()
 		ADC0832.destroy()
+		log.close()
